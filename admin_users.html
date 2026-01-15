@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion Utilisateurs</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div style="display:flex; align-items:center; gap:20px;">
+            <a href="index.html" class="navbar-brand">SQL Executor</a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">Exécution</a>
+                <a href="audit_view.html" class="nav-link">Audit Logs</a>
+                <a href="admin_users.html" class="nav-link"
+                    style="color:var(--primary); font-weight:700;">Utilisateurs</a>
+            </div>
+        </div>
+        <div style="display:flex; align-items:center;">
+            <button id="themeBtn" onclick="toggleTheme()"
+                style="background:none; border:none; cursor:pointer; font-size:1.2rem; margin-right:10px;">🌙</button>
+            <button onclick="window.location.href='index.html'" style="padding:0.5rem; cursor:pointer;">Retour</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>Gestion des Utilisateurs</h1>
+
+        <!-- User List -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <div class="card-title">Comptes Existants</div>
+                <button class="refresh-btn" onclick="loadUsers()" style="margin:0;">Actualiser ⟳</button>
+            </div>
+            <div class="card-body" style="padding:0;">
+                <table id="usersTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Utilisateur</th>
+                            <th>Rôle</th>
+                            <th>Créé le</th>
+                            <th style="text-align:right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="5" style="text-align:center;">Chargement...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Add User Form -->
+        <div class="card" style="max-width: 500px;">
+            <div class="card-header">
+                <div class="card-title">Ajouter un utilisateur</div>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label">Nom d'utilisateur</label>
+                    <input type="text" id="newUsername" class="form-control" placeholder="ex: jean.dupont">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Mot de passe</label>
+                    <input type="password" id="newPassword" class="form-control" placeholder="Minimum 6 caractères">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Rôle</label>
+                    <select id="newRole" class="form-control">
+                        <option value="user">Utilisateur (Standard)</option>
+                        <option value="admin">Administrateur</option>
+                    </select>
+                </div>
+                <button class="btn-primary" onclick="createUser()">Créer le compte</button>
+                <div id="formMsg" style="margin-top:10px; font-weight:500;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Theme Logic
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            updateThemeIcon();
+        }
+
+        function updateThemeIcon() {
+            const btn = document.getElementById('themeBtn');
+            if (btn) {
+                const isDark = document.body.classList.contains('dark-mode');
+                btn.textContent = isDark ? '☀️' : '🌙';
+            }
+        }
+
+        // Apply
+        if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+        document.addEventListener('DOMContentLoaded', updateThemeIcon);
+
+        async function loadUsers() {
+            const tbody = document.querySelector('#usersTable tbody');
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Chargement...</td></tr>';
+
+            try {
+                const res = await fetch('api_users.php');
+
+                // Gestion redir auth/role
+                if (res.status === 403) {
+                    alert("Accès refusé. Réservé aux administrateurs.");
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                const data = await res.json();
+
+                if (data.error) throw new Error(data.error);
+
+                tbody.innerHTML = '';
+                data.users.forEach(u => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                    <td>${u.id}</td>
+                    <td><b>${u.username}</b></td>
+                    <td><span class="badge ${u.role === 'admin' ? 'badge-error' : 'badge-success'}">${u.role.toUpperCase()}</span></td>
+                    <td>${u.created_at}</td>
+                    <td style="text-align:right;">
+                        <button onclick="deleteUser(${u.id}, '${u.username}')" 
+                                style="color:red; background:none; border:none; cursor:pointer; font-weight:bold;">
+                            Supprimer 🗑️
+                        </button>
+                    </td>
+                `;
+                    tbody.appendChild(tr);
+                });
+
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">Erreur: ${err.message}</td></tr>`;
+            }
+        }
+
+        async function createUser() {
+            const userIn = document.getElementById('newUsername');
+            const passIn = document.getElementById('newPassword');
+            const roleIn = document.getElementById('newRole');
+            const msgDiv = document.getElementById('formMsg');
+
+            const payload = {
+                username: userIn.value,
+                password: passIn.value,
+                role: roleIn.value
+            };
+
+            if (!payload.username || !payload.password) {
+                msgDiv.textContent = "Veuillez remplir tous les champs.";
+                msgDiv.style.color = "red";
+                return;
+            }
+
+            try {
+                const res = await fetch('api_users.php', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    msgDiv.textContent = "Utilisateur créé avec succès !";
+                    msgDiv.style.color = "green";
+                    userIn.value = '';
+                    passIn.value = '';
+                    loadUsers(); // Refresh list
+                } else {
+                    msgDiv.textContent = "Erreur : " + data.error;
+                    msgDiv.style.color = "red";
+                }
+            } catch (err) {
+                msgDiv.textContent = "Erreur technique.";
+                msgDiv.style.color = "red";
+            }
+        }
+
+        async function deleteUser(id, username) {
+            if (!confirm(`Toutes tes sûr de vouloir supprimer l'utilisateur "${username}" ?`)) return;
+
+            try {
+                const res = await fetch(`api_users.php?id=${id}`, { method: 'DELETE' });
+                const data = await res.json();
+
+                if (res.ok) {
+                    loadUsers();
+                } else {
+                    alert("Erreur : " + data.error);
+                }
+            } catch (e) {
+                alert("Erreur technique de suppression.");
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadUsers);
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Executor - Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round" />
+            </svg>
+            SQL Execute
+        </div>
+
+        <div style="margin-left: 2rem; display: flex; gap: 20px;">
+            <a href="index.html" style="text-decoration: none; color: var(--primary); font-weight: 500;">Exécution</a>
+            <a href="audit_view.html" id="navAuditLink"
+                style="text-decoration: none; color: var(--text-main); font-weight: 500; transition: color 0.2s;"
+                onmouseover="this.style.color='#4F46E5'" onmouseout="this.style.color='#1e293b'">Audit Logs</a>
+            <a href="admin_users.html" id="navUsersLink"
+                style="text-decoration: none; color: var(--text-main); font-weight: 500; transition: color 0.2s;"
+                onmouseover="this.style.color='#4F46E5'" onmouseout="this.style.color='#1e293b'">Utilisateurs</a>
+        </div>
+
+        <div class="navbar-user">
+            <button id="themeBtn" onclick="toggleTheme()"
+                style="background:none; border:none; cursor:pointer; font-size:1.2rem; margin-right:10px;">🌙</button>
+            <span>Connecté : <strong id="currentUser">...</strong></span>
+            <button class="btn-logout" onclick="logout()">Déconnexion</button>
+        </div>
+    </nav>
+
+    <div class="main-container">
+
+        <!-- SEARCH CARD -->
+        <div class="card" id="queryForm">
+            <div class="card-header">
+                <span class="card-title">1. Configuration de la requête</span>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label" for="querySelector">Type de rapport</label>
+                    <select id="querySelector" class="form-control">
+                        <!-- Peuplé par JS -->
+                    </select>
+                </div>
+
+                <div id="parameterInputs">
+                    <!-- Champs dynamiques -->
+                </div>
+
+                <div class="mt-4">
+                    <button id="executeBtn" onclick="executeQuery()" class="btn-primary">
+                        <span id="btnIcon">▶</span>
+                        <span id="btnText">Exécuter la requête</span>
+                        <div id="loadingSpinner" class="spinner hidden"></div>
+                    </button>
+                    <button id="resetBtn" onclick="resetForm()" class="btn-secondary">
+                        ⟳ Réinitialiser
+                    </button>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- RESULTS CARD -->
+        <div class="card" id="resultsContainer">
+            <div class="card-header">
+                <span class="card-title">2. Résultats</span>
+                <button id="exportCsvBtn" onclick="downloadCSV()" class="btn-success hidden">
+                    📥 Exporter CSV
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="resultsTableContainer" class="table-responsive">
+                    <div style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                        Les résultats s'afficheront ici...
+                    </div>
+                </div>
+
+                <div id="paginationContainer" class="pagination hidden">
+                    <button onclick="previousPage()" id="prevBtn">← Précédent</button>
+                    <span id="paginationInfo" style="font-size: 0.9rem; font-weight: 500;"></span>
+                    <button onclick="nextPage()" id="nextBtn">Suivant →</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- TOASTS -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="script.js?v=2.0"></script>
+</body>
+
+</html>

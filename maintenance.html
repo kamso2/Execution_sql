@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maintenance en cours</title>
+    <link href="style.css" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: var(--bg-body);
+            text-align: center;
+        }
+
+        .maintenance-card {
+            background: var(--bg-card);
+            padding: 3rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            max-width: 500px;
+        }
+
+        .icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        h1 {
+            color: var(--text-main);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        p {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="maintenance-card">
+        <span class="icon">🔧</span>
+        <h1>Service temporairement indisponible</h1>
+        <p>Nous rencontrons actuellement un problème de connexion avec la base de données. Nos équipes travaillent à
+            rétablir le service au plus vite.</p>
+        <button class="btn-primary" onclick="window.location.href='index.html'">Réessayer</button>
+    </div>
+</body>
+
+</html>

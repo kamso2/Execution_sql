@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audit Logs - SQL Executor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div style="display:flex; align-items:center; gap:20px;">
+            <a href="index.html" class="navbar-brand">SQL Executor</a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">Exécution</a>
+                <a href="audit_view.html" class="nav-link" style="color:var(--primary);">Audit Logs</a>
+                <a href="admin_users.html" class="nav-link">Utilisateurs</a>
+            </div>
+        </div>
+        <div style="display:flex; align-items:center;">
+            <button id="themeBtn" onclick="toggleTheme()"
+                style="background:none; border:none; cursor:pointer; font-size:1.2rem; margin-right:10px;">🌙</button>
+            <button onclick="window.location.href='index.html'" style="padding:0.5rem; cursor:pointer;">Retour</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h1>Journal d'Audit</h1>
+            <button class="refresh-btn" onclick="loadLogs()">Actualiser ⟳</button>
+        </div>
+
+        <div class="card">
+            <table id="logsTable">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Utilisateur</th>
+                        <th>Action (Query ID)</th>
+                        <th>IP</th>
+                        <th>Statut</th>
+                        <th>Lignes</th>
+                        <th>Erreur</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="7" style="text-align:center;">Chargement...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Theme Logic
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            updateThemeIcon();
+        }
+
+        function updateThemeIcon() {
+            const btn = document.getElementById('themeBtn');
+            if (btn) {
+                const isDark = document.body.classList.contains('dark-mode');
+                btn.textContent = isDark ? '☀️' : '🌙';
+            }
+        }
+
+        // Apply
+        if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+        document.addEventListener('DOMContentLoaded', updateThemeIcon);
+
+        async function loadLogs() {
+            const tbody = document.querySelector('#logsTable tbody');
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Chargement...</td></tr>';
+
+            try {
+                const res = await fetch('api_get_logs.php');
+
+                if (res.status === 403) {
+                    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:red;">⛔ Accès refusé. Réservé aux administrateurs.</td></tr>`;
+                    setTimeout(() => window.location.href = 'index.html', 2000);
+                    return;
+                }
+
+                const data = await res.json();
+
+                // Nouvelle gestion d'erreur BDD
+                if (res.status === 500 && data && data.is_db_error) {
+                    window.location.href = 'maintenance.html';
+                    return;
+                }
+
+                if (data.error) {
+                    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:red;">Erreur: ${data.error}</td></tr>`;
+                    return;
+                }
+
+                if (!data.logs || data.logs.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Aucun log trouvé.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = '';
+                data.logs.forEach(log => {
+                    const tr = document.createElement('tr');
+                    const statusBadge = log.status === 'success'
+                        ? '<span class="badge badge-success">Succès</span>'
+                        : '<span class="badge badge-error">Erreur</span>';
+
+                    tr.innerHTML = `
+                    <td>${log.timestamp}</td>
+                    <td><b>${log.user}</b></td>
+                    <td>${log.query_id}</td>
+                    <td style="font-family:monospace; font-size:0.85em;">${log.remote_ip}</td>
+                    <td>${statusBadge}</td>
+                    <td>${log.row_count}</td>
+                    <td style="color:#ef4444; font-size:0.9em;">${log.error || ''}</td>
+                `;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:red;">Erreur de connexion API</td></tr>`;
+                console.error(err);
+            }
+        }
+
+        // Charger au démarrage
+        window.addEventListener('DOMContentLoaded', loadLogs);
+    </script>
+
+</body>
+
+</html>
