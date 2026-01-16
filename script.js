@@ -134,8 +134,6 @@ const QUERY_MAPPING = {
                 label: "Valeur Actuelle (Filtre WHERE)",
                 options: [
                     { value: " ", label: "VIDE (Espace)" },
-                    { value: "NOT_DIALED", label: "NOT_DIALED" },
-                    { value: "COMPLETED", label: "COMPLETED" },
                     { value: "CALLBACK", label: "CALLBACK" }
                 ]
             },
@@ -143,36 +141,8 @@ const QUERY_MAPPING = {
                 id: "new_status",
                 label: "NOUVEAU STATUT (SET)",
                 options: [
-                    { value: "CALLBACK", label: "CALLBACK" },
                     { value: "COMPLETED", label: "COMPLETED" },
-                    { value: "NOT_DIALED", label: "NOT_DIALED" },
-                    { value: " ", label: "VIDE (Espace)" }
-                ]
-            },
-            {
-                id: "date_column",
-                label: "Filtre Date Optionnel",
-                options: [
-                    { value: "", label: "-- Aucune date --" },
-                    { value: "fin_abonnement", label: "Date fin abonnement" }
-                ]
-            }
-        ],
-        text_params: [],
-        use_date_range: true
-    },
-    "AJOUT_DATE": {
-        label: "📅 AJOUT DATE (Admin)",
-        dropdowns: [
-            { id: "table", label: "Base de données cible (Table)", options: COMMON_TABLE_OPTIONS },
-            {
-                id: "value",
-                label: "Valeur Actuelle (Filtre WHERE)",
-                options: [
-                    { value: " ", label: "VIDE (Espace)" },
-                    { value: "NOT_DIALED", label: "NOT_DIALED" },
-                    { value: "COMPLETED", label: "COMPLETED" },
-                    { value: "CALLBACK", label: "CALLBACK" }
+                    { value: "NOT_DIALED", label: "NOT_DIALED" }
                 ]
             },
             {
@@ -184,7 +154,25 @@ const QUERY_MAPPING = {
             }
         ],
         text_params: [],
-        use_date_range: true
+        use_date_range: true,
+        date_required: true
+    },
+    "AJOUT_DATE": {
+        label: "📅 AJOUT DATE (Admin)",
+        dropdowns: [
+            { id: "table", label: "Base de données cible (Table)", options: COMMON_TABLE_OPTIONS },
+            {
+                id: "date_column",
+                label: "Filtre Date",
+                options: [
+                    { value: "fin_abonnement", label: "Date fin abonnement" }
+                ]
+            }
+        ],
+        text_params: [],
+        fixed_params: { "value": "COMPLETED" },
+        use_date_range: true,
+        date_required: true
     }
 };
 
@@ -262,7 +250,8 @@ function displayDynamicParameters() {
         // Conteneur Flex pour Start et End
         const wrapper = document.createElement('div');
         wrapper.className = 'form-group';
-        wrapper.innerHTML = `<label class="form-label">Période (Optionnel)</label>`;
+        const labelText = queryInfo.date_required ? 'Période (Obligatoire)' : 'Période (Optionnel)';
+        wrapper.innerHTML = `<label class="form-label">${labelText}</label>`;
 
         const flexDiv = document.createElement('div');
         flexDiv.style.display = 'flex';
@@ -321,6 +310,11 @@ async function executeQuery() {
     const queryInfo = QUERY_MAPPING[selectedQueryId];
     const payload = { query_id: selectedQueryId, params: {} };
 
+    // Inject Fixed Params (Hidden)
+    if (queryInfo.fixed_params) {
+        Object.assign(payload.params, queryInfo.fixed_params);
+    }
+
     // Collect Data form DOM
     // 1. Dropdowns
     if (queryInfo.dropdowns) {
@@ -367,6 +361,15 @@ async function executeQuery() {
         setLoading(false);
         showToast("Veuillez choisir les colonnes à afficher.", "error");
         return;
+    }
+
+    // Validation Dates Obligatoires
+    if (queryInfo.date_required) {
+        if (!payload.params.start_date || !payload.params.end_date) {
+            setLoading(false);
+            showToast("Veuillez sélectionner une date de début et de fin.", "error");
+            return;
+        }
     }
 
     // Clean up empty values to prevent [object Object] errors
