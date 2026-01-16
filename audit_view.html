@@ -6,53 +6,79 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Audit Logs - SQL Executor</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=2.1">
 </head>
 
 <body>
 
-    <nav class="navbar">
-        <div style="display:flex; align-items:center; gap:20px;">
-            <a href="index.html" class="navbar-brand">SQL Executor</a>
-            <div class="nav-links">
-                <a href="index.html" class="nav-link">Exécution</a>
-                <a href="audit_view.html" class="nav-link" style="color:var(--primary);">Audit Logs</a>
-                <a href="admin_users.html" class="nav-link">Utilisateurs</a>
+    <div class="dashboard-layout">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                    <span>SQL Execute</span>
+                </div>
             </div>
-        </div>
-        <div style="display:flex; align-items:center;">
-            <button id="themeBtn" onclick="toggleTheme()"
-                style="background:none; border:none; cursor:pointer; font-size:1.2rem; margin-right:10px;">🌙</button>
-            <button onclick="window.location.href='index.html'" style="padding:0.5rem; cursor:pointer;">Retour</button>
-        </div>
-    </nav>
 
-    <div class="container">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h1>Journal d'Audit</h1>
-            <button class="refresh-btn" onclick="loadLogs()">Actualiser ⟳</button>
-        </div>
+            <nav class="sidebar-nav">
+                <a href="index.html" class="nav-link">
+                    <span class="icon">⚡</span> Exécution
+                </a>
+                <a href="audit_view.html" id="navAuditLink" class="nav-link active">
+                    <span class="icon">📜</span> Audit Logs
+                </a>
+                <a href="admin_users.html" id="navUsersLink" class="nav-link">
+                    <span class="icon">👥</span> Utilisateurs
+                </a>
+            </nav>
 
-        <div class="card">
-            <table id="logsTable">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Utilisateur</th>
-                        <th>Action (Query ID)</th>
-                        <th>IP</th>
-                        <th>Statut</th>
-                        <th>Lignes</th>
-                        <th>Erreur</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td colspan="7" style="text-align:center;">Chargement...</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <small>Connecté en tant que</small>
+                    <strong id="currentUser">Admin</strong>
+                </div>
+                <div class="sidebar-actions">
+                    <button id="themeBtn" onclick="toggleTheme()" class="btn-icon" title="Thème">🌙</button>
+                    <button onclick="window.location.href='index.html'" class="btn-icon logout"
+                        title="Retour">⬅</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="dashboard-content">
+            <div class="main-container">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h1>Journal d'Audit</h1>
+                    <button class="refresh-btn" onclick="loadLogs()">Actualiser ⟳</button>
+                </div>
+
+                <div class="card">
+                    <table id="logsTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Utilisateur</th>
+                                <th>Action (Query ID)</th>
+                                <th>IP</th>
+                                <th>Statut</th>
+                                <th>Lignes</th>
+                                <th>Erreur</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="7" style="text-align:center;">Chargement...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
     </div>
 
     <script>
