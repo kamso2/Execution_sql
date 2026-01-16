@@ -54,7 +54,17 @@
             <div class="main-container">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <h1>Journal d'Audit</h1>
-                    <button class="refresh-btn" onclick="loadLogs()">Actualiser ⟳</button>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <div
+                            style="display:flex; align-items:center; gap:5px; background:#fee2e2; padding:5px 10px; border-radius:6px; border:1px solid #fecaca;">
+                            <span style="font-size:0.8rem; color:#991b1b; font-weight:600;">Purger avant le :</span>
+                            <input type="date" id="purgeDate"
+                                style="border:1px solid #fecaca; border-radius:4px; padding:2px;">
+                            <button onclick="purgeLogs()"
+                                style="background:#991b1b; color:white; border:none; border-radius:4px; padding:4px 8px; cursor:pointer; font-size:0.8rem;">🗑️</button>
+                        </div>
+                        <button class="refresh-btn" onclick="loadLogs()">Actualiser ⟳</button>
+                    </div>
                 </div>
 
                 <div class="card">
@@ -153,6 +163,36 @@
                 });
             } catch (err) {
                 tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:red;">Erreur de connexion API</td></tr>`;
+                console.error(err);
+            }
+        }
+
+        async function purgeLogs() {
+            const dateInput = document.getElementById('purgeDate');
+            const date = dateInput.value;
+
+            if (!date) {
+                alert("Veuillez sélectionner une date limite.");
+                return;
+            }
+
+            if (!confirm(`Etes-vous sûr de vouloir SUPPRIMER DÉFINITIVEMENT tous les logs antérieurs au ${date} ?`)) {
+                return;
+            }
+
+            try {
+                const res = await fetch(`api_get_logs.php?action=purge&date=${date}`, { method: 'DELETE' });
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    alert(`Succès : ${data.deleted_count} logs supprimés.`);
+                    loadLogs();
+                    dateInput.value = '';
+                } else {
+                    alert("Erreur : " + (data.error || "Inconnue"));
+                }
+            } catch (err) {
+                alert("Erreur technique lors de la purge.");
                 console.error(err);
             }
         }

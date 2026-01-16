@@ -1,69 +1,78 @@
 <?php
 /**
- * audit_log.php - Enregistrement d'audit des requêtes exécutées
+ * audit_log.php - Enregistrement d'audit (Version BDD)
  */
 
 /**
- * Enregistrer une requête dans le log d'audit
- * @param string $user Utilisateur qui a exécuté la requête
- * @param string $query_id ID de la requête
- * @param array $params Paramètres utilisés
- * @param int $rowCount Nombre de lignes retournées
- * @param string $status 'success' ou 'error'
- * @param string $error_msg Message d'erreur (si status = error)
+ * Enregistrer une requête dans la table audit_logs
  */
-function logAudit($user, $query_id, $params, $rowCount = 0, $status = 'success', $error_msg = '') {
-    $timestamp = date('Y-m-d H:i:s');
-    $remote_ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-    
-    // Format du log : JSON (facile à parser ultérieurement)
-    $log_entry = [
-        'timestamp' => $timestamp,
-        'user' => $user,
-        'query_id' => $query_id,
-        'params' => $params,
-        'row_count' => $rowCount,
-        'status' => $status,
-        'error' => $error_msg,
-        'remote_ip' => $remote_ip,
-    ];
-    
-    $log_line = json_encode($log_entry) . PHP_EOL;
-    
-    // Écrire dans un fichier de log (dossier logs/ doit exister et être accessible en écriture)
-    $log_file = __DIR__ . '/logs/audit.log';
-    
-    // Créer le dossier logs s'il n'existe pas
-    if (!is_dir(__DIR__ . '/logs')) {
-        mkdir(__DIR__ . '/logs', 0755, true);
+function logAudit($username, $query_id, $params, $rowCount = 0, $status = 'success', $error_msg = '') {
+    // Utiliser la connexion d'audit (locale)
+    global $pdoAudit;
+    if (!isset($pdoAudit)) {
+        require_once __DIR__ . '/db_audit.php';
     }
-    
-    error_log($log_line, 3, $log_file);
+
+    try {
+        $timestamp = date('Y-m-d H:i:s');
+        $remote_ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+
+        $sql = "INSERT INTO audit_logs (timestamp, user, query_id, params, row_count, status, error_msg, remote_ip)
+                VALUES (:timestamp, :user, :query_id, :params, :row_count, :status, :error_msg, :remote_ip)";
+        
+        $stmt = $pdoAudit->prepare($sql);
+        $stmt->execute([
+            ':timestamp' => $timestamp,
+            ':user'      => $username,
+            ':query_id'  => $query_id,
+            ':params'    => json_encode($params),
+            ':row_count' => $rowCount,
+            ':status'    => $status,
+            ':error_msg' => $error_msg,
+            ':remote_ip' => $remote_ip
+        ]);
+
+    } catch (PDOException $e) {
+        // En cas d'erreur BDD, on fallback sur un fichier pour ne pas perdre l'info
+        $log_line = date('Y-m-d H:i:s') . " [DB_LOG_ERROR] " . $e->getMessage() . PHP_EOL;
+        error_log($log_line, 3, __DIR__ . '/../logs/db_errors.log');
+    }
 }
 
 /**
- * Lire les logs d'audit (optionnel, pour un futur dashboard)
- * @param int $limit Nombre de lignes à retourner
- * @return array
+ * Lire les logs depuis la BDD
  */
 function getAuditLogs($limit = 100) {
-    $log_file = __DIR__ . '/logs/audit.log';
-    
-    if (!file_exists($log_file)) {
+    global $pdoAudit;
+    if (!isset($pdoAudit)) {
+        require_once __DIR__ . '/db_audit.php';
+    }
+
+    try {
+        $stmt = $pdoAudit->prepare("SELECT * FROM audit_logs ORDER BY timestamp DESC LIMIT :limit");
+        $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
         return [];
     }
-    
-    $lines = file($log_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    $lines = array_slice($lines, -$limit); // Dernières $limit lignes
-    
-    $logs = [];
-    foreach ($lines as $line) {
-        $entry = json_decode($line, true);
-        if ($entry) {
-            $logs[] = $entry;
-        }
+}
+
+/**
+ * Supprimer les logs antérieurs à une date donnée
+ */
+function purgeAuditLogs($beforeDate) {
+    global $pdoAudit;
+    if (!isset($pdoAudit)) {
+        require_once __DIR__ . '/db_audit.php';
     }
-    
-    return $logs;
+
+    try {
+        $stmt = $pdoAudit->prepare("DELETE FROM audit_logs WHERE timestamp < :date");
+        $stmt->execute([':date' => $beforeDate]);
+        return $stmt->rowCount(); // Retourne le nombre de logs supprimés
+    } catch (PDOException $e) {
+        return false;
+    }
 }
 ?>
