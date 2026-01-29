@@ -16,20 +16,27 @@ function logAudit($username, $query_id, $params, $rowCount = 0, $status = 'succe
     try {
         $timestamp = date('Y-m-d H:i:s');
         $remote_ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+        
+        // Extract table name from params if available
+        $table_name = null;
+        if (is_array($params) && isset($params['table'])) {
+            $table_name = $params['table'];
+        }
 
-        $sql = "INSERT INTO audit_logs (timestamp, user, query_id, params, row_count, status, error_msg, remote_ip)
-                VALUES (:timestamp, :user, :query_id, :params, :row_count, :status, :error_msg, :remote_ip)";
+        $sql = "INSERT INTO audit_logs (timestamp, user, query_id, table_name, params, row_count, status, error_msg, remote_ip)
+                VALUES (:timestamp, :user, :query_id, :table_name, :params, :row_count, :status, :error_msg, :remote_ip)";
         
         $stmt = $pdoAudit->prepare($sql);
         $stmt->execute([
-            ':timestamp' => $timestamp,
-            ':user'      => $username,
-            ':query_id'  => $query_id,
-            ':params'    => json_encode($params),
-            ':row_count' => $rowCount,
-            ':status'    => $status,
-            ':error_msg' => $error_msg,
-            ':remote_ip' => $remote_ip
+            ':timestamp'  => $timestamp,
+            ':user'       => $username,
+            ':query_id'   => $query_id,
+            ':table_name' => $table_name,
+            ':params'     => json_encode($params),
+            ':row_count'  => $rowCount,
+            ':status'     => $status,
+            ':error_msg'  => $error_msg,
+            ':remote_ip'  => $remote_ip
         ]);
 
     } catch (PDOException $e) {

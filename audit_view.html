@@ -74,6 +74,7 @@
                                 <th>Date</th>
                                 <th>Utilisateur</th>
                                 <th>Action (Query ID)</th>
+                                <th>Table</th>
                                 <th>IP</th>
                                 <th>Statut</th>
                                 <th>Lignes</th>
@@ -154,6 +155,7 @@
                     <td>${log.timestamp}</td>
                     <td><b>${log.user}</b></td>
                     <td>${log.query_id}</td>
+                    <td style="color:#2563eb;">${log.table_name || '-'}</td>
                     <td style="font-family:monospace; font-size:0.85em;">${log.remote_ip}</td>
                     <td>${statusBadge}</td>
                     <td>${log.row_count}</td>
