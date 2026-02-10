@@ -3,7 +3,7 @@
 require 'includes/auth.php';
 require 'includes/audit_log.php';
 
-// Auth check
+// Vérification authentification
 if (!isAuthenticated()) {
     http_response_code(401);
     die("Erreur: Non authentifié.");

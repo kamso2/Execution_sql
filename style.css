@@ -24,17 +24,17 @@
     --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.15);
 
-    /* Success & Error */
+    /* Succès et Erreur */
     --success: #4CAF50;
     --error: #F44336;
 
-    /* Border Radius */
+    /* Rayon des bordures */
     --radius-card: 12px;
     --radius-button: 24px;
     --radius-input: 8px;
 }
 
-/* DARK MODE */
+/* MODE SOMBRE */
 .dark-mode {
     --bg-body: #0f172a;
     --bg-card: #1e293b;
@@ -103,14 +103,14 @@ body {
     min-height: 100vh;
 }
 
-/* DASHBOARD LAYOUT */
+/* DISPOSITION DU TABLEAU DE BORD */
 .dashboard-layout {
     display: grid;
     grid-template-columns: 260px 1fr;
     min-height: 100vh;
 }
 
-/* SIDEBAR */
+/* BARRE LATÉRALE */
 .sidebar {
     background: var(--bg-card);
     border-right: 1px solid var(--border);
@@ -160,7 +160,7 @@ body {
 .nav-link:hover,
 .nav-link.active {
     background: #eef2ff;
-    /* Primary light tint */
+    /* Teinte claire primaire */
     color: var(--primary);
 }
 
@@ -168,12 +168,12 @@ body {
     font-size: 1.1rem;
 }
 
-/* Dark mode adjustments for nav link */
+/* Ajustements mode sombre pour les liens de navigation */
 .dark-mode .nav-link:hover,
 .dark-mode .nav-link.active {
     background: rgba(255, 255, 255, 0.05);
     color: #818cf8;
-    /* Light Indigo */
+    /* Indigo clair */
 }
 
 .sidebar-footer {
@@ -220,7 +220,7 @@ body {
     background: #fee2e2;
 }
 
-/* MAIN CONTENT */
+/* CONTENU PRINCIPAL */
 .dashboard-content {
     background: var(--bg-body);
     padding: 2rem;
@@ -234,7 +234,7 @@ body {
     gap: 1.5rem;
 }
 
-/* CARDS */
+/* CARTES */
 .card {
     background: var(--bg-card);
     border-radius: var(--radius-card);
@@ -267,7 +267,7 @@ body {
     padding: 1.5rem;
 }
 
-/* FORMS */
+/* FORMULAIRES */
 .form-group {
     margin-bottom: 1rem;
 }
@@ -324,7 +324,7 @@ body {
 }
 
 .btn-secondary {
-    /* Style inline moved here */
+    /* Style en ligne déplacé ici */
     padding: 0.75rem 1.5rem;
     border: 1px solid var(--border);
     background: white;
@@ -363,7 +363,7 @@ body {
     margin-bottom: 1rem;
 }
 
-/* TABLE */
+/* TABLEAU */
 .table-responsive {
     overflow-x: auto;
     border: 1px solid var(--border);
@@ -407,7 +407,7 @@ tr:hover td {
     background: #f8fafc;
 }
 
-/* UTILS */
+/* UTILITAIRES */
 .hidden {
     display: none !important;
 }
@@ -440,7 +440,7 @@ tr:hover td {
     color: #991b1b;
 }
 
-/* TOAST NOTIFICATIONS */
+/* NOTIFICATIONS TOAST */
 .toast-container {
     position: fixed;
     bottom: 20px;
@@ -482,7 +482,7 @@ tr:hover td {
     }
 }
 
-/* SPINNER */
+/* INDICATEUR DE CHARGEMENT */
 .spinner {
     width: 1rem;
     height: 1rem;

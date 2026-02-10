@@ -278,7 +278,7 @@
     </div>
 
     <script>
-        // Theme Logic
+        // Logique du thème
         function toggleTheme() {
             document.body.classList.toggle('dark-mode');
             const isDark = document.body.classList.contains('dark-mode');
@@ -292,13 +292,13 @@
             btn.textContent = isDark ? '☀️' : '🌙';
         }
 
-        // Apply theme on load
+        // Appliquer le thème au chargement
         if (localStorage.getItem('theme') === 'dark') {
             document.body.classList.add('dark-mode');
         }
         updateThemeIcon();
 
-        // Gestion des erreurs via URL parameter
+        // Gestion des erreurs via paramètre URL
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.has('error')) {
             const errorBox = document.getElementById('errorMessage');

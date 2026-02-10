@@ -1,4 +1,4 @@
-﻿// Theme Logic
+﻿// Logique du thème
 function toggleTheme() {
     document.body.classList.toggle('dark-mode');
     const isDark = document.body.classList.contains('dark-mode');
@@ -14,7 +14,7 @@ function updateThemeIcon() {
     }
 }
 
-// Apply theme on load
+// Appliquer le thème au chargement
 if (localStorage.getItem('theme') === 'dark') {
     document.body.classList.add('dark-mode');
 }
@@ -209,7 +209,7 @@ function displayDynamicParameters() {
 
     const queryInfo = QUERY_MAPPING[selectedQueryId];
 
-    // Dropdowns
+    // Listes déroulantes
     if (queryInfo.dropdowns) {
         queryInfo.dropdowns.forEach(dd => {
             createFieldWrapper(dd.label, () => {
@@ -231,7 +231,7 @@ function displayDynamicParameters() {
         });
     }
 
-    // Text Inputs
+    // Champs texte
     if (queryInfo.text_params) {
         queryInfo.text_params.forEach(param => {
             createFieldWrapper(param.label, () => {
@@ -245,9 +245,9 @@ function displayDynamicParameters() {
         });
     }
 
-    // Date Range (Nouveau)
+    // Plage de dates (Nouveau)
     if (queryInfo.use_date_range) {
-        // Conteneur Flex pour Start et End
+        // Conteneur Flex pour Début et Fin
         const wrapper = document.createElement('div');
         wrapper.className = 'form-group';
         const labelText = queryInfo.date_required ? 'Période (Obligatoire)' : 'Période (Optionnel)';
@@ -301,7 +301,7 @@ async function executeQuery() {
         return;
     }
 
-    // UI Loading
+    // Chargement de l'interface
     setLoading(true);
     resultsTableContainer.innerHTML = `<div style="text-align:center; padding:2rem; color:#64748b;">Chargement des données...</div>`;
     exportCsvBtn.classList.add('hidden');
@@ -310,18 +310,18 @@ async function executeQuery() {
     const queryInfo = QUERY_MAPPING[selectedQueryId];
     const payload = { query_id: selectedQueryId, params: {} };
 
-    // Inject Fixed Params (Hidden)
+    // Injecter les paramètres fixes (cachés)
     if (queryInfo.fixed_params) {
         Object.assign(payload.params, queryInfo.fixed_params);
     }
 
-    // Collect Data form DOM
-    // 1. Dropdowns
+    // Collecter les données du DOM
+    // 1. Listes déroulantes
     if (queryInfo.dropdowns) {
         queryInfo.dropdowns.forEach(dd => {
             const el = document.getElementById(dd.id);
             if (el) {
-                // Fix: Ensure we get the string value, not the element object
+                // Correction : S'assurer d'obtenir la valeur chaîne, pas l'objet élément
                 const value = el.value || '';
                 if (dd.id === 'value') {
                     payload.params['value'] = value;
@@ -332,7 +332,7 @@ async function executeQuery() {
         });
     }
 
-    // 2. Text Params
+    // 2. Paramètres texte
     if (queryInfo.text_params) {
         queryInfo.text_params.forEach(p => {
             const el = document.getElementById(p.name);
@@ -372,7 +372,7 @@ async function executeQuery() {
         }
     }
 
-    // Clean up empty values to prevent [object Object] errors
+    // Nettoyer les valeurs vides pour éviter les erreurs [object Object]
     if (payload.condition_column === '') delete payload.condition_column;
     if (payload.date_column === '') delete payload.date_column;
     // Ne supprimer params.value que si condition_column n'est pas défini
@@ -380,7 +380,7 @@ async function executeQuery() {
         delete payload.params.value;
     }
 
-    // Fetch
+    // Requête
     try {
         const res = await fetch(API_ENDPOINT, {
             method: 'POST',
@@ -405,7 +405,7 @@ async function executeQuery() {
             throw new Error(data && data.error ? data.error : `Erreur serveur ${res.status}`);
         }
 
-        // Success
+        // Succès
         allResults = data.results || [];
         const count = data.count !== undefined ? data.count : allResults.length;
         const queryLabel = queryInfo.label || selectedQueryId;
@@ -419,7 +419,7 @@ async function executeQuery() {
         }
         showToast(msg, "success");
 
-        // Reset sort
+        // Réinitialiser le tri
         currentSort = { column: null, direction: 'asc' };
 
         currentPage = 1;
@@ -495,10 +495,10 @@ function displayResultsTable(results) {
 
 function sortData(column) {
     if (currentSort.column === column) {
-        // Toggle direction
+        // Basculer la direction
         currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
     } else {
-        // New column
+        // Nouvelle colonne
         currentSort.column = column;
         currentSort.direction = 'asc';
     }
@@ -517,7 +517,7 @@ function sortData(column) {
             valA = Number(valA);
             valB = Number(valB);
         } else {
-            // String case insensitive
+            // Chaîne insensible à la casse
             valA = String(valA).toLowerCase();
             valB = String(valB).toLowerCase();
         }
@@ -572,7 +572,7 @@ function downloadCSV() {
     form.action = 'api_export.php';
     form.style.display = 'none';
 
-    // Helper pour ajouter un input
+    // Fonction auxiliaire pour ajouter un input
     const addInput = (name, value) => {
         const input = document.createElement('input');
         input.type = 'hidden';

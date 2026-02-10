@@ -48,12 +48,12 @@
             </div>
         </aside>
 
-        <!-- MAIN CONTENT -->
+        <!-- CONTENU PRINCIPAL -->
         <main class="dashboard-content">
             <div class="main-container">
                 <h1>Gestion des Utilisateurs</h1>
 
-                <!-- User List -->
+                <!-- Liste des utilisateurs -->
                 <div class="card mb-4">
                     <div class="card-header">
                         <div class="card-title">Comptes Existants</div>
@@ -79,7 +79,7 @@
                     </div>
                 </div>
 
-                <!-- Add User Form -->
+                <!-- Formulaire d'ajout d'utilisateur -->
                 <div class="card" style="max-width: 500px;">
                     <div class="card-header">
                         <div class="card-title">Ajouter un utilisateur</div>
@@ -110,7 +110,7 @@
     </div>
 
     <script>
-        // Theme Logic
+        // Logique du thème
         function toggleTheme() {
             document.body.classList.toggle('dark-mode');
             const isDark = document.body.classList.contains('dark-mode');
@@ -126,7 +126,7 @@
             }
         }
 
-        // Apply
+        // Appliquer
         if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
         document.addEventListener('DOMContentLoaded', updateThemeIcon);
 
@@ -137,7 +137,7 @@
             try {
                 const res = await fetch('api_users.php');
 
-                // Gestion redir auth/role
+                // Gestion redirection auth/rôle
                 if (res.status === 403) {
                     alert("Accès refusé. Réservé aux administrateurs.");
                     window.location.href = 'index.html';
@@ -201,7 +201,7 @@
                     msgDiv.style.color = "green";
                     userIn.value = '';
                     passIn.value = '';
-                    loadUsers(); // Refresh list
+                    loadUsers(); // Rafraîchir la liste
                 } else {
                     msgDiv.textContent = "Erreur : " + data.error;
                     msgDiv.style.color = "red";

@@ -17,7 +17,7 @@ function logAudit($username, $query_id, $params, $rowCount = 0, $status = 'succe
         $timestamp = date('Y-m-d H:i:s');
         $remote_ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
         
-        // Extract table name from params if available
+        // Extraire le nom de la table des paramètres si disponible
         $table_name = null;
         if (is_array($params) && isset($params['table'])) {
             $table_name = $params['table'];
