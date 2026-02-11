@@ -1,0 +1,337 @@
+================================================================================
+    PROCÉDURE D'AJOUT D'UN NOUVEAU RAPPORT AVEC UNE NOUVELLE REQUÊTE
+================================================================================
+
+Date de création : 10 février 2026
+Version : 2.0
+Application : Execution_SQL
+
+
+================================================================================
+TABLE DES MATIÈRES
+================================================================================
+
+1. ÉTAPES GÉNÉRALES
+2. ÉTAPE 1 : AJOUTER LA REQUÊTE DANS LE BACKEND (PHP)
+3. ÉTAPE 2 : AJOUTER LA REQUÊTE DANS LE FRONTEND (JAVASCRIPT)
+4. ÉTAPE 3 : CONFIGURER LES PERMISSIONS (AUTORISATION PAR RÔLE)
+5. ÉTAPE 4 : VÉRIFICATION ET TEST
+6. EXEMPLES DE REQUÊTES COURANTES
+
+
+================================================================================
+1. ÉTAPES GÉNÉRALES
+================================================================================
+
+Pour ajouter un nouveau rapport, vous devez modifier 3 fichiers principaux :
+  1. includes/query_config.php  - Configuration backend de la requête
+  2. script.js                   - Interface utilisateur frontend
+  3. includes/auth.php           - Permissions d'accès par rôle
+
+
+================================================================================
+2. ÉTAPE 1 : AJOUTER LA REQUÊTE DANS LE BACKEND (PHP)
+================================================================================
+
+Fichier : includes/query_config.php
+
+Localisation : Lignes 38-77 (section "$queries")
+
+Actions :
+  1. Ouvrir le fichier includes/query_config.php
+  2. Localiser l'array $queries (ligne 38)
+  3. Ajouter votre nouvelle requête AVANT la ligne de fermeture "];
+
+--------------------------------------------------------------------------------
+Structure d'une requête :
+--------------------------------------------------------------------------------
+
+    "nom_de_la_requete" => [
+        "template" => "SELECT/UPDATE/DELETE ... %table% ... :param",
+        "replacement_maps" => [
+            "table"            => $COMMON_TABLES,
+            "columns"          => ["all" => "*"],
+            "condition_column" => ["status" => "STATUS"],
+            "date_column"      => $COMMON_DATE_MAP
+        ],
+        "allowed_values" => ['VALEUR1', 'VALEUR2'],  // Optionnel
+        "pdo_params" => ["param1", "param2"]
+    ],
+
+--------------------------------------------------------------------------------
+Explication des paramètres :
+--------------------------------------------------------------------------------
+
+  - "nom_de_la_requete" : Identifiant unique (minuscules, underscores)
+  - "template"          : Requête SQL avec placeholders (%table%, :param)
+  - "replacement_maps"  : Mapping des placeholders
+  - "allowed_values"    : Valeurs autorisées (pour UPDATE/DELETE)
+  - "pdo_params"        : Paramètres PDO à binder
+
+--------------------------------------------------------------------------------
+Exemple concret - Ajouter un rapport "EXPORT_CLIENTS" :
+--------------------------------------------------------------------------------
+
+    /**
+     * Rapport : EXPORT CLIENTS (Nouveau)
+     */
+    "EXPORT_CLIENTS" => [
+        "template" => "SELECT nom, prenom, telephone FROM %table% WHERE STATUS = :value",
+        "replacement_maps" => [
+            "table"            => $COMMON_TABLES,
+            "condition_column" => ["status" => "STATUS"],
+            "date_column"      => $COMMON_DATE_MAP
+        ],
+        "pdo_params" => ["value"]
+    ],
+
+
+================================================================================
+3. ÉTAPE 2 : AJOUTER LA REQUÊTE DANS LE FRONTEND (JAVASCRIPT)
+================================================================================
+
+Fichier : script.js
+
+Localisation : Lignes 1-50 (section "QUERY_CONFIGS")
+
+Actions :
+  1. Ouvrir le fichier script.js
+  2. Localiser l'objet QUERY_CONFIGS (début du fichier)
+  3. Ajouter votre nouvelle requête
+
+--------------------------------------------------------------------------------
+Structure d'une configuration frontend :
+--------------------------------------------------------------------------------
+
+    EXPORT_CLIENTS: {
+        label: "📊 Export Clients",
+        requiresValue: true,
+        requiresNewStatus: false,
+        requiresDateFilter: false,
+        allowedTables: "all"
+    },
+
+--------------------------------------------------------------------------------
+Explication des paramètres :
+--------------------------------------------------------------------------------
+
+  - label              : Texte affiché dans l'interface (peut contenir emojis)
+  - requiresValue      : true si la requête nécessite un champ "Valeur"
+  - requiresNewStatus  : true si la requête nécessite un "Nouveau statut"
+  - requiresDateFilter : true si la requête nécessite un filtre de date
+  - allowedTables      : "all" ou array de tables autorisées
+
+--------------------------------------------------------------------------------
+Exemple complet :
+--------------------------------------------------------------------------------
+
+    EXPORT_CLIENTS: {
+        label: "📊 Export Clients",
+        requiresValue: true,           // Nécessite un statut à filtrer
+        requiresNewStatus: false,      // Pas de mise à jour de statut
+        requiresDateFilter: true,      // Filtrer par date
+        allowedTables: "all"           // Disponible pour toutes les tables
+    },
+
+
+================================================================================
+4. ÉTAPE 3 : CONFIGURER LES PERMISSIONS (AUTORISATION PAR RÔLE)
+================================================================================
+
+Fichier : includes/auth.php
+
+Localisation : Lignes 16-54 (constante "ROLE_PERMISSIONS")
+
+Actions :
+  1. Ouvrir le fichier includes/auth.php
+  2. Localiser la constante ROLE_PERMISSIONS
+  3. Ajouter votre requête dans les rôles appropriés
+
+--------------------------------------------------------------------------------
+Structure :
+--------------------------------------------------------------------------------
+
+    define('ROLE_PERMISSIONS', [
+        'admin' => [
+            'EXPORT_CLIENTS' => [
+                'repeteurs', 'retour_echus', 'one_three_months', ...
+            ],
+        ],
+        'user' => [
+            'EXPORT_CLIENTS' => [
+                'repeteurs', 'retour_echus'
+            ],
+        ],
+    ]);
+
+--------------------------------------------------------------------------------
+Règles :
+--------------------------------------------------------------------------------
+
+  - 'admin' : Accès complet à toutes les tables
+  - 'user'  : Accès limité (définir les tables autorisées)
+
+--------------------------------------------------------------------------------
+Exemple :
+--------------------------------------------------------------------------------
+
+    'admin' => [
+        'nombre_de_fiches' => [
+            'repeteurs', 'retour_echus', 'one_three_months', ...
+        ],
+        'RELANCE' => [
+            'repeteurs', 'retour_echus', 'one_three_months', ...
+        ],
+        'EXPORT_CLIENTS' => [  // NOUVEAU RAPPORT
+            'repeteurs', 'retour_echus', 'one_three_months', ...
+        ],
+    ],
+
+
+================================================================================
+5. ÉTAPE 4 : VÉRIFICATION ET TEST
+================================================================================
+
+--------------------------------------------------------------------------------
+Checklist de vérification :
+--------------------------------------------------------------------------------
+
+  [ ] Le nom de la requête est identique dans les 3 fichiers
+  [ ] La syntaxe PHP est correcte (virgules, guillemets, crochets)
+  [ ] La syntaxe JavaScript est correcte
+  [ ] Les permissions sont définies pour admin et user
+  [ ] Les placeholders (%table%, :param) sont cohérents
+
+--------------------------------------------------------------------------------
+Tests à effectuer :
+--------------------------------------------------------------------------------
+
+  1. Rafraîchir la page index.html (Ctrl+F5)
+  2. Vérifier que le nouveau rapport apparaît dans la liste déroulante
+  3. Sélectionner une table et exécuter le rapport
+  4. Vérifier que les résultats s'affichent correctement
+  5. Consulter audit_view.html pour vérifier l'enregistrement du log
+
+
+================================================================================
+6. EXEMPLES DE REQUÊTES COURANTES
+================================================================================
+
+--------------------------------------------------------------------------------
+A. Requête SELECT simple :
+--------------------------------------------------------------------------------
+
+    "LISTE_ACTIFS" => [
+        "template" => "SELECT * FROM %table% WHERE STATUS = 'ACTIVE'",
+        "replacement_maps" => [
+            "table" => $COMMON_TABLES,
+        ],
+        "pdo_params" => []
+    ],
+
+Configuration frontend :
+
+    LISTE_ACTIFS: {
+        label: "📋 Liste des Actifs",
+        requiresValue: false,
+        requiresNewStatus: false,
+        requiresDateFilter: false,
+        allowedTables: "all"
+    },
+
+--------------------------------------------------------------------------------
+B. Requête UPDATE avec condition :
+--------------------------------------------------------------------------------
+
+    "ARCHIVER" => [
+        "template" => "UPDATE %table% SET archived = 1 WHERE STATUS = :value",
+        "replacement_maps" => [
+            "table" => $COMMON_TABLES,
+        ],
+        "pdo_params" => ["value"]
+    ],
+
+Configuration frontend :
+
+    ARCHIVER: {
+        label: "📦 Archiver",
+        requiresValue: true,
+        requiresNewStatus: false,
+        requiresDateFilter: false,
+        allowedTables: "all"
+    },
+
+--------------------------------------------------------------------------------
+C. Requête avec filtre de date :
+--------------------------------------------------------------------------------
+
+    "CLIENTS_PAR_DATE" => [
+        "template" => "SELECT * FROM %table% WHERE %date_column% BETWEEN :date_start AND :date_end",
+        "replacement_maps" => [
+            "table" => $COMMON_TABLES,
+            "date_column" => $COMMON_DATE_MAP
+        ],
+        "pdo_params" => ["date_start", "date_end"]
+    ],
+
+Configuration frontend :
+
+    CLIENTS_PAR_DATE: {
+        label: "📅 Clients par Date",
+        requiresValue: false,
+        requiresNewStatus: false,
+        requiresDateFilter: true,
+        allowedTables: "all"
+    },
+
+--------------------------------------------------------------------------------
+D. Requête UPDATE avec nouveau statut :
+--------------------------------------------------------------------------------
+
+    "CHANGER_STATUT" => [
+        "template" => "UPDATE %table% SET STATUS = :new_status WHERE STATUS = :value",
+        "replacement_maps" => [
+            "table" => $COMMON_TABLES,
+        ],
+        "allowed_values" => ['COMPLETED', 'NOT_DIALED', 'CALLBACK'],
+        "pdo_params" => ["value", "new_status"]
+    ],
+
+Configuration frontend :
+
+    CHANGER_STATUT: {
+        label: "🔄 Changer Statut",
+        requiresValue: true,
+        requiresNewStatus: true,
+        requiresDateFilter: false,
+        allowedTables: "all"
+    },
+
+
+================================================================================
+RÉSUMÉ DES FICHIERS À MODIFIER
+================================================================================
+
++---------------------------+--------+------------------------------------------+
+| Fichier                   | Lignes | Section                                  |
++---------------------------+--------+------------------------------------------+
+| includes/query_config.php | 38-77  | Array $queries                           |
+| script.js                 | 1-50   | Objet QUERY_CONFIGS                      |
+| includes/auth.php         | 16-54  | Constante ROLE_PERMISSIONS               |
++---------------------------+--------+------------------------------------------+
+
+
+================================================================================
+NOTES IMPORTANTES
+================================================================================
+
+1. Le nom de la requête doit être IDENTIQUE dans les 3 fichiers
+2. Respecter la syntaxe PHP et JavaScript (virgules, guillemets)
+3. Toujours tester après modification
+4. Consulter les logs d'audit pour vérifier l'exécution
+5. Voir le fichier BASE_2.md pour la gestion des tables (campagnes)
+
+
+================================================================================
+FIN DU DOCUMENT
+================================================================================

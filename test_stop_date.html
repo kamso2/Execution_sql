@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Test STOP_DATE</title>
+</head>
+
+<body>
+    <h1>Test de vérification STOP_DATE</h1>
+    <div id="result"></div>
+
+    <script>
+        // Copier la configuration QUERY_MAPPING de script.js
+        const COMMON_TABLE_OPTIONS = [
+            { value: "", label: "-- Sélectionnez une table --" },
+            { value: "repeteurs", label: "FRAGILE_REPETEUR" }
+        ];
+
+        const QUERY_MAPPING = {
+            "nombre_de_fiches": {
+                label: "🔍 NOMBRE DE FICHES"
+            },
+            "RELANCE": {
+                label: "⚡ RELANCE (Admin)"
+            },
+            "AJOUT_DATE": {
+                label: "📅 AJOUT DATE (Admin)"
+            },
+            "STOP_DATE": {
+                label: "🛑 STOP DATE (Admin)",
+                dropdowns: [
+                    { id: "table", label: "Base de données cible (Table)", options: COMMON_TABLE_OPTIONS },
+                    {
+                        id: "date_column",
+                        label: "Filtre Date",
+                        options: [
+                            { value: "fin_abonnement", label: "Date fin abonnement" }
+                        ]
+                    }
+                ],
+                text_params: [],
+                use_date_range: true,
+                date_required: true
+            }
+        };
+
+        // Test
+        const resultDiv = document.getElementById('result');
+        let html = '<h2>Requêtes disponibles :</h2><ul>';
+
+        for (const queryId in QUERY_MAPPING) {
+            html += `<li><strong>${queryId}</strong>: ${QUERY_MAPPING[queryId].label}</li>`;
+        }
+
+        html += '</ul>';
+
+        if (QUERY_MAPPING.STOP_DATE) {
+            html += '<h2 style="color: green;">✅ STOP_DATE est bien défini !</h2>';
+            html += '<pre>' + JSON.stringify(QUERY_MAPPING.STOP_DATE, null, 2) + '</pre>';
+        } else {
+            html += '<h2 style="color: red;">❌ STOP_DATE n\'est PAS défini !</h2>';
+        }
+
+        resultDiv.innerHTML = html;
+    </script>
+</body>
+
+</html>

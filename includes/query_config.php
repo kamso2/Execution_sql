@@ -74,5 +74,17 @@ $queries = [
         ],
         "pdo_params" => ["value"]
     ],
+
+    /**
+     * Rapport : STOP DATE (Marquer comme COMPLETED selon date fin abonnement)
+     */
+    "STOP_DATE" => [
+        "template" => "UPDATE %table% SET STATUS = 'COMPLETED' WHERE STATUS != 'COMPLETED'",
+        "replacement_maps" => [
+            "table"       => $COMMON_TABLES,
+            "date_column" => $COMMON_DATE_MAP
+        ],
+        "pdo_params" => []
+    ],
 ];
 ?>

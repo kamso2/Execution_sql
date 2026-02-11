@@ -1,0 +1,107 @@
+# Solutions pour afficher le rapport STOP_DATE
+
+## Problème
+Le rapport STOP_DATE n'apparaît pas dans la liste déroulante de la page index.html.
+
+## Causes possibles
+1. **Cache du navigateur** - Le navigateur utilise une ancienne version de script.js
+2. **Erreur JavaScript** - Une erreur de syntaxe empêche le chargement
+3. **Fichier non rechargé** - Le serveur web n'a pas rechargé les fichiers
+
+## Solutions à essayer (dans l'ordre)
+
+### Solution 1 : Vider le cache du navigateur (RECOMMANDÉ)
+
+**Méthode rapide :**
+1. Ouvrir la page `index.html`
+2. Appuyer sur **Ctrl + Shift + R** (Windows) ou **Cmd + Shift + R** (Mac)
+   - Cela force le rechargement sans cache
+
+**Méthode complète :**
+1. Appuyer sur **Ctrl + Shift + Delete**
+2. Sélectionner "Images et fichiers en cache"
+3. Cliquer sur "Effacer les données"
+4. Recharger la page avec **F5**
+
+### Solution 2 : Vérifier la console JavaScript
+
+1. Ouvrir `index.html` dans le navigateur
+2. Appuyer sur **F12** pour ouvrir les outils de développement
+3. Aller dans l'onglet **Console**
+4. Vérifier s'il y a des erreurs en rouge
+5. Si erreur, noter le message et le numéro de ligne
+
+### Solution 3 : Tester avec la page de test
+
+1. Ouvrir dans le navigateur : `http://localhost/Execution_sql/test_stop_date.html`
+2. Vérifier si "STOP_DATE" apparaît dans la liste
+3. Si oui, le problème vient du cache
+4. Si non, il y a un problème de syntaxe
+
+### Solution 4 : Redémarrer le serveur WAMP
+
+1. Cliquer sur l'icône WAMP dans la barre des tâches
+2. Sélectionner "Restart All Services"
+3. Attendre que WAMP redevienne vert
+4. Recharger la page avec **Ctrl + Shift + R**
+
+### Solution 5 : Vérification manuelle du fichier
+
+Ouvrir `c:\wamp64\www\Execution_sql\script.js` et vérifier :
+
+1. **Ligne 177** : Doit contenir `"STOP_DATE": {`
+2. **Ligne 192** : Doit contenir `}`
+3. **Ligne 193** : Doit contenir `};` (fermeture de QUERY_MAPPING)
+
+Si ces lignes ne sont pas présentes, le fichier n'a pas été sauvegardé correctement.
+
+### Solution 6 : Mode navigation privée
+
+1. Ouvrir une **fenêtre de navigation privée** (Ctrl + Shift + N)
+2. Aller sur `http://localhost/Execution_sql/index.html`
+3. Se connecter
+4. Vérifier si STOP_DATE apparaît
+
+Si le rapport apparaît en navigation privée, c'est définitivement un problème de cache.
+
+## Vérification que tout fonctionne
+
+Une fois le rapport visible :
+
+1. **Sélectionner** "🛑 STOP DATE (Admin)"
+2. **Vérifier** que les champs suivants apparaissent :
+   - Base de données cible (Table)
+   - Filtre Date
+   - Période (Obligatoire) avec 2 champs de date
+
+3. **Tester** l'exécution :
+   - Choisir une table (ex: FRAGILE_REPETEUR)
+   - Sélectionner "Date fin abonnement"
+   - Définir une date de fin (ex: 2026-02-11)
+   - Cliquer sur "Exécuter"
+
+## Si rien ne fonctionne
+
+Vérifier que les 3 fichiers ont bien été modifiés :
+
+```bash
+# Dans PowerShell
+cd c:\wamp64\www\Execution_sql
+
+# Vérifier query_config.php
+Select-String -Path "includes\query_config.php" -Pattern "STOP_DATE"
+
+# Vérifier script.js
+Select-String -Path "script.js" -Pattern "STOP_DATE"
+
+# Vérifier auth.php
+Select-String -Path "includes\auth.php" -Pattern "STOP_DATE"
+```
+
+Chaque commande doit retourner au moins une ligne.
+
+## Contact
+
+Si le problème persiste après avoir essayé toutes ces solutions, vérifier :
+- Les logs d'erreur PHP dans `c:\wamp64\logs\php_error.log`
+- Les logs Apache dans `c:\wamp64\logs\apache_error.log`

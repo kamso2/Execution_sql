@@ -1,0 +1,396 @@
+================================================================================
+    PROCÉDURE DE DÉPLOIEMENT DE LA BASE DE DONNÉES
+================================================================================
+
+Date de création : 10 février 2026
+Version : 2.0
+Application : Execution_SQL
+
+
+================================================================================
+TABLE DES MATIÈRES
+================================================================================
+
+1.  VUE D'ENSEMBLE
+2.  ÉTAPE 1 : CONFIGURATION DE LA BASE PRINCIPALE
+3.  ÉTAPE 2 : CONFIGURATION DE LA BASE D'AUTHENTIFICATION
+4.  ÉTAPE 3 : CONFIGURATION DE LA BASE D'AUDIT
+5.  ÉTAPE 4 : CRÉATION DES BASES DE DONNÉES
+6.  ÉTAPE 5 : CRÉATION DES UTILISATEURS MYSQL
+7.  ÉTAPE 6 : INITIALISATION DE LA TABLE D'AUTHENTIFICATION
+8.  ÉTAPE 7 : INITIALISATION DE LA TABLE D'AUDIT
+9.  ÉTAPE 8 : VÉRIFICATION DES CONNEXIONS
+10. ÉTAPE 9 : TEST DE L'APPLICATION
+11. RÉSUMÉ DES FICHIERS À MODIFIER
+12. BONNES PRATIQUES DE SÉCURITÉ
+13. DÉPANNAGE
+
+
+================================================================================
+1. VUE D'ENSEMBLE
+================================================================================
+
+L'application utilise 3 bases de données distinctes :
+  1. Base principale (fonivaclist)     - Données métier / campagnes
+  2. Base d'authentification (auth_gva) - Comptes utilisateurs
+  3. Base d'audit (audit_gva)           - Journaux d'audit
+
+Chaque base peut être sur un serveur différent.
+
+
+================================================================================
+2. ÉTAPE 1 : CONFIGURATION DE LA BASE PRINCIPALE
+================================================================================
+
+Fichier : includes/db_config.php
+
+Lignes à modifier :
+  Ligne 5 : $host = 'ADRESSE_SERVEUR';
+  Ligne 6 : $db   = 'NOM_BASE_DONNEES';
+  Ligne 7 : $user = 'UTILISATEUR_MYSQL';
+  Ligne 8 : $pass = 'MOT_DE_PASSE';
+
+--------------------------------------------------------------------------------
+Exemple de configuration :
+--------------------------------------------------------------------------------
+
+    AVANT (Configuration actuelle) :
+    $host = '192.168.10.5';
+    $db   = 'fonivaclist';
+    $user = 'root';
+    $pass = '';
+
+    APRÈS (Nouvel environnement) :
+    $host = 'db.monentreprise.com';
+    $db   = 'production_data';
+    $user = 'app_user';
+    $pass = 'M0tD3P@ss3S3cur1s3';
+
+IMPORTANT : Ne jamais commiter les mots de passe dans Git !
+
+
+================================================================================
+3. ÉTAPE 2 : CONFIGURATION DE LA BASE D'AUTHENTIFICATION
+================================================================================
+
+Fichier : includes/auth.php
+
+Lignes à modifier :
+  Ligne 10 : define('AUTH_DB_HOST', 'SERVEUR');
+  Ligne 11 : define('AUTH_DB_NAME', 'NOM_BASE');
+  Ligne 12 : define('AUTH_DB_USER', 'UTILISATEUR');
+  Ligne 13 : define('AUTH_DB_PASS', 'MOT_DE_PASSE');
+
+--------------------------------------------------------------------------------
+Exemple de configuration :
+--------------------------------------------------------------------------------
+
+    AVANT :
+    define('AUTH_DB_HOST', 'localhost');
+    define('AUTH_DB_NAME', 'auth_gva');
+    define('AUTH_DB_USER', 'root');
+    define('AUTH_DB_PASS', '');
+
+    APRÈS :
+    define('AUTH_DB_HOST', 'auth-db.monentreprise.com');
+    define('AUTH_DB_NAME', 'prod_users');
+    define('AUTH_DB_USER', 'auth_user');
+    define('AUTH_DB_PASS', 'Auth@2026!Secure');
+
+NOTE : La base d'authentification peut être sur le même serveur que la base
+       principale ou sur un serveur séparé pour plus de sécurité.
+
+
+================================================================================
+4. ÉTAPE 3 : CONFIGURATION DE LA BASE D'AUDIT
+================================================================================
+
+Fichier : includes/db_audit.php
+
+Lignes à modifier :
+  Ligne 4 : $host = 'SERVEUR';
+  Ligne 5 : $db   = 'NOM_BASE';
+  Ligne 6 : $user = 'UTILISATEUR';
+  Ligne 7 : $pass = 'MOT_DE_PASSE';
+
+--------------------------------------------------------------------------------
+Exemple de configuration :
+--------------------------------------------------------------------------------
+
+    AVANT :
+    $host = '127.0.0.1';
+    $db   = 'audit_gva';
+    $user = 'root';
+    $pass = '';
+
+    APRÈS :
+    $host = 'localhost';
+    $db   = 'prod_audit_logs';
+    $user = 'audit_user';
+    $pass = 'Aud1t@S3cur3!2026';
+
+RECOMMANDATION : Pour des raisons de performance, la base d'audit est 
+                 généralement sur localhost (même serveur que l'application).
+
+
+================================================================================
+5. ÉTAPE 4 : CRÉATION DES BASES DE DONNÉES
+================================================================================
+
+Connectez-vous à MySQL et exécutez les commandes suivantes :
+
+    -- Base principale (si elle n'existe pas déjà)
+    CREATE DATABASE IF NOT EXISTS production_data 
+    CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+    -- Base d'authentification
+    CREATE DATABASE IF NOT EXISTS prod_users 
+    CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+    -- Base d'audit
+    CREATE DATABASE IF NOT EXISTS prod_audit_logs 
+    CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+
+================================================================================
+6. ÉTAPE 5 : CRÉATION DES UTILISATEURS MYSQL (RECOMMANDÉ)
+================================================================================
+
+Pour des raisons de sécurité, créez des utilisateurs dédiés :
+
+    -- Utilisateur pour la base principale
+    CREATE USER 'app_user'@'%' IDENTIFIED BY 'M0tD3P@ss3S3cur1s3';
+    GRANT SELECT, INSERT, UPDATE, DELETE ON production_data.* TO 'app_user'@'%';
+
+    -- Utilisateur pour l'authentification
+    CREATE USER 'auth_user'@'localhost' IDENTIFIED BY 'Auth@2026!Secure';
+    GRANT ALL PRIVILEGES ON prod_users.* TO 'auth_user'@'localhost';
+
+    -- Utilisateur pour l'audit
+    CREATE USER 'audit_user'@'localhost' IDENTIFIED BY 'Aud1t@S3cur3!2026';
+    GRANT ALL PRIVILEGES ON prod_audit_logs.* TO 'audit_user'@'localhost';
+
+    FLUSH PRIVILEGES;
+
+IMPORTANT : Accordez uniquement les privilèges nécessaires !
+
+
+================================================================================
+7. ÉTAPE 6 : INITIALISATION DE LA TABLE D'AUTHENTIFICATION
+================================================================================
+
+Créez la table "users" dans la base d'authentification :
+
+    USE prod_users;
+
+    CREATE TABLE users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        username VARCHAR(50) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        role ENUM('admin', 'user') DEFAULT 'user',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- Créer un compte admin par défaut
+    INSERT INTO users (username, password, role) 
+    VALUES ('admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin');
+    -- Mot de passe : "password" (À CHANGER IMMÉDIATEMENT)
+
+
+================================================================================
+8. ÉTAPE 7 : INITIALISATION DE LA TABLE D'AUDIT
+================================================================================
+
+Méthode 1 - Via le navigateur :
+  1. Accéder à : http://votre-domaine.com/setup_audit_table.php
+  2. Vérifier le message de succès
+
+Méthode 2 - En ligne de commande :
+  php setup_audit_table.php
+
+--------------------------------------------------------------------------------
+Structure de la table "audit_logs" :
+--------------------------------------------------------------------------------
+
+  - id (INT, AUTO_INCREMENT)       : Identifiant unique
+  - user (VARCHAR)                 : Nom d'utilisateur
+  - ip_address (VARCHAR)           : Adresse IP
+  - query_type (VARCHAR)           : Type de requête
+  - table_name (VARCHAR)           : Nom de la table
+  - query_details (TEXT)           : Détails de la requête
+  - created_at (TIMESTAMP)         : Date et heure
+
+
+================================================================================
+9. ÉTAPE 8 : VÉRIFICATION DES CONNEXIONS
+================================================================================
+
+Exécutez le script de vérification :
+
+    php verify_audit_db.php
+
+--------------------------------------------------------------------------------
+Résultat attendu :
+--------------------------------------------------------------------------------
+
+    ✓ Connexion à la base d'audit réussie
+    ✓ Table audit_logs existe
+
+--------------------------------------------------------------------------------
+Si des erreurs apparaissent :
+--------------------------------------------------------------------------------
+
+  1. Vérifiez les credentials dans les 3 fichiers de configuration
+  2. Testez la connexion MySQL manuellement :
+     mysql -h HOST -u USER -p DATABASE
+  3. Vérifiez que l'utilisateur a les privilèges nécessaires
+
+
+================================================================================
+10. ÉTAPE 9 : TEST DE L'APPLICATION
+================================================================================
+
+--------------------------------------------------------------------------------
+Test 1 - Connexion :
+--------------------------------------------------------------------------------
+
+  1. Accéder à login.html
+  2. Utilisateur : admin
+  3. Mot de passe : password (à changer immédiatement)
+  4. Vérifier l'accès au dashboard
+
+--------------------------------------------------------------------------------
+Test 2 - Exécution de requête :
+--------------------------------------------------------------------------------
+
+  1. Sélectionner "NOMBRE DE FICHES"
+  2. Choisir une table
+  3. Cliquer sur "Exécuter"
+  4. Vérifier que les données s'affichent
+
+--------------------------------------------------------------------------------
+Test 3 - Vérification des logs :
+--------------------------------------------------------------------------------
+
+  1. Accéder à audit_view.html
+  2. Vérifier que la requête a été enregistrée
+  3. Vérifier les informations : utilisateur, IP, date, requête
+
+
+================================================================================
+11. RÉSUMÉ DES FICHIERS À MODIFIER
+================================================================================
+
++---------------------------+--------+------------------------------------------+
+| Fichier                   | Lignes | Paramètres                               |
++---------------------------+--------+------------------------------------------+
+| includes/db_config.php    | 5-8    | $host, $db, $user, $pass                 |
+| includes/auth.php         | 10-13  | AUTH_DB_HOST, AUTH_DB_NAME, _USER, _PASS |
+| includes/db_audit.php     | 4-7    | $host, $db, $user, $pass                 |
++---------------------------+--------+------------------------------------------+
+
+
+================================================================================
+12. BONNES PRATIQUES DE SÉCURITÉ
+================================================================================
+
+En production :
+  [ ] Créer des utilisateurs MySQL dédiés (pas root)
+  [ ] Utiliser des mots de passe forts et complexes
+  [ ] Accorder uniquement les privilèges minimaux nécessaires
+  [ ] Stocker les credentials dans des variables d'environnement (.env)
+  [ ] Activer les connexions chiffrées MySQL (SSL/TLS)
+  [ ] Changer le mot de passe admin par défaut immédiatement
+  [ ] Ne jamais commiter les fichiers de configuration avec credentials
+
+--------------------------------------------------------------------------------
+Exemple avec variables d'environnement :
+--------------------------------------------------------------------------------
+
+    // includes/db_config.php (Version sécurisée)
+    $host = getenv('DB_HOST') ?: 'localhost';
+    $db   = getenv('DB_NAME') ?: 'fonivaclist';
+    $user = getenv('DB_USER') ?: 'root';
+    $pass = getenv('DB_PASS') ?: '';
+
+--------------------------------------------------------------------------------
+Fichier .env (à ne JAMAIS commiter) :
+--------------------------------------------------------------------------------
+
+    DB_HOST=db.monentreprise.com
+    DB_NAME=production_data
+    DB_USER=app_user
+    DB_PASS=M0tD3P@ss3S3cur1s3
+
+    AUTH_DB_HOST=auth-db.monentreprise.com
+    AUTH_DB_NAME=prod_users
+    AUTH_DB_USER=auth_user
+    AUTH_DB_PASS=Auth@2026!Secure
+
+    AUDIT_DB_HOST=localhost
+    AUDIT_DB_NAME=prod_audit_logs
+    AUDIT_DB_USER=audit_user
+    AUDIT_DB_PASS=Aud1t@S3cur3!2026
+
+
+================================================================================
+13. DÉPANNAGE
+================================================================================
+
+--------------------------------------------------------------------------------
+Erreur : "Connexion à la base de données échouée"
+--------------------------------------------------------------------------------
+
+  Solution :
+    1. Vérifier les credentials dans les 3 fichiers de configuration
+    2. Tester la connexion MySQL manuellement
+    3. Vérifier que l'utilisateur a les privilèges nécessaires
+
+--------------------------------------------------------------------------------
+Erreur : "Table 'audit_logs' doesn't exist"
+--------------------------------------------------------------------------------
+
+  Solution :
+    Exécuter le script d'initialisation :
+    php setup_audit_table.php
+
+--------------------------------------------------------------------------------
+Erreur : "Access denied for user"
+--------------------------------------------------------------------------------
+
+  Solution :
+    Vérifier les privilèges de l'utilisateur :
+    SHOW GRANTS FOR 'app_user'@'%';
+
+--------------------------------------------------------------------------------
+Erreur : "Can't connect to MySQL server"
+--------------------------------------------------------------------------------
+
+  Solution :
+    1. Vérifier que le serveur MySQL est démarré
+    2. Vérifier le pare-feu (port 3306)
+    3. Vérifier l'adresse du serveur (host)
+
+--------------------------------------------------------------------------------
+Erreur : "Unknown database"
+--------------------------------------------------------------------------------
+
+  Solution :
+    Créer la base de données manquante :
+    CREATE DATABASE nom_base CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+
+================================================================================
+RESSOURCES COMPLÉMENTAIRES
+================================================================================
+
+  - README.md          : Documentation générale de l'application
+  - BASE.md            : Guide de déploiement détaillé
+  - BASE_2.md          : Guide de changement des noms de tables (campagnes)
+  - DEPLOY_WINDOWS.md  : Déploiement spécifique Windows
+  - DEPLOY_LINUX.md    : Déploiement spécifique Linux
+
+
+================================================================================
+FIN DU DOCUMENT
+================================================================================

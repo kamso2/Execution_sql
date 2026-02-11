@@ -39,6 +39,14 @@ define('ROLE_PERMISSIONS', [
             'ultimate_evasion_plus', 'ultimate_toutcanal_plus',
             'upgrade_access_evasion', 'welcome_g11'
         ],
+        'STOP_DATE' => [
+            'repeteurs', 'retour_echus', 'one_three_months', 'welcome_call',
+            'access_evasion_tc_inactifs', 'echus_3_4_mois', 'evasion_actifs',
+            'fragile_retour_echus', 'g11_bundle', 'insight_plus', 'netflix_inactif',
+            'project_g11', 'reconquete_access_evasion', 'service_plus',
+            'ultimate_evasion_plus', 'ultimate_toutcanal_plus',
+            'upgrade_access_evasion', 'welcome_g11'
+        ],
 
     ],
     'user' => [

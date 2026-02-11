@@ -173,6 +173,22 @@ const QUERY_MAPPING = {
         fixed_params: { "value": "COMPLETED" },
         use_date_range: true,
         date_required: true
+    },
+    "STOP_DATE": {
+        label: "🛑 STOP DATE (Admin)",
+        dropdowns: [
+            { id: "table", label: "Base de données cible (Table)", options: COMMON_TABLE_OPTIONS },
+            {
+                id: "date_column",
+                label: "Filtre Date",
+                options: [
+                    { value: "fin_abonnement", label: "Date fin abonnement" }
+                ]
+            }
+        ],
+        text_params: [],
+        use_date_range: true,
+        date_required: true
     }
 };
 
